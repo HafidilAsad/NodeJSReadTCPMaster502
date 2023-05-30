@@ -2,17 +2,17 @@ const ModbusRTU = require("modbus-serial");
 const mysql = require("mysql2/promise");
 
 const client = new ModbusRTU();
-const HOST = "10.14.139.121";
+const HOST = "10.14.139.122";
 const PORT = 502;
-const ADDRESS = 20128;
+const ADDRESS = 5;
 const SLAVE_ID = 1;
 
 const DB_HOST = "localhost";
 const DB_USER = "root";
 const DB_PASSWORD = "";
 const DB_DATABASE = "monitoring-gas";
-const DB_TABLE = "monitoring_gas30";
-const DB_UPDATE_ID = 1;
+const DB_TABLE = "db_realtime_monitoring_gas";
+const DB_UPDATE_ID = 4;
 
 async function connectToDatabase() {
   try {
@@ -58,6 +58,7 @@ client
             const buffer = Buffer.from(data.buffer);
             const value = buffer.readFloatBE();
             updateValueInDatabase(connection, value);
+            console.log(value);
           }
         });
       }, 1000);

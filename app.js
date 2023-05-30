@@ -2,11 +2,13 @@ const ModbusRTU = require("modbus-serial");
 const mysql = require("mysql2/promise");
 
 const client = new ModbusRTU();
-const HOST = "10.14.139.121";
+const HOST = "10.14.139.122";
+
 const PORT = 502;
-const ADDRESS_1 = 20128;
-const ADDRESS_2 = 20130;
-const SLAVE_ID = 1;
+const ADDRESS_1 = 6;
+const ADDRESS_2 = 8;
+
+const SLAVE_ID = 13;
 
 // Database configuration
 const DB_HOST = "localhost";
@@ -14,9 +16,9 @@ const DB_USER = "root";
 const DB_PASSWORD = "";
 const DB_DATABASE = "monitoring-gas";
 const DB_TABLE = "db_realtime_monitoring_gas";
-const DB_TABLE2 = "db_permenit";
-const DB_TABLE3 = "db_akhir_hari";
-const DB_UPDATE_ID = 1;
+const DB_TABLE2 = "db_permenit_swiftasia";
+const DB_TABLE3 = "db_akhir_hari_swiftasia";
+const DB_UPDATE_ID = 4;
 
 async function connectToDatabase() {
   try {
@@ -71,12 +73,12 @@ async function insertValueIntoDatabase(
       [nama_mesin, rounded_gas_used, gas_consumption]
     );
 
-    // console.log(`Inserted values into database successfully`);
+    // console.log(`Inserted values swift asia into database successfully`);
   } catch (error) {
-    console.error(`Error inserting values into database: ${error}`);
+    console.error(`Error inserting swift asia into database: ${error}`);
   }
 }
-
+//Striko1
 async function updateValueInDatabase(pool, value, column) {
   try {
     const roundedValue = parseFloat(value.toFixed(1)); // round value to one decimal place
@@ -90,7 +92,7 @@ async function updateValueInDatabase(pool, value, column) {
     //   `Updated value ${value} in database with timestamp ${timestamp}`
     // );
   } catch (error) {
-    console.error(`Error updating value in database: ${error}`);
+    console.error(`Error updating swift asia in database: ${error}`);
   }
 }
 
@@ -109,7 +111,12 @@ client.connectTCP(HOST, { port: PORT }).then(() => {
         } else {
           // Combine the two registers into a single 32-bit value
           const buffer = Buffer.from(data.buffer);
-          const value = buffer.readFloatBE();
+          const swappedBuffer = Buffer.alloc(4);
+
+          buffer.copy(swappedBuffer, 0, 0, 4);
+          swappedBuffer.swap16();
+
+          const value = swappedBuffer.readFloatLE();
 
           // Update the value in the database
           updateValueInDatabase(pool, value, "gas_used");
@@ -121,8 +128,21 @@ client.connectTCP(HOST, { port: PORT }).then(() => {
           console.error(`Error reading data gas_consumption: ${err}`);
         } else {
           // Combine the two registers into a single 32-bit value
+
           const buffer = Buffer.from(data.buffer);
-          const value = buffer.readUInt32BE();
+          const swappedBuffer = Buffer.alloc(4);
+
+          buffer.copy(swappedBuffer, 0, 0, 4);
+
+          const temp = swappedBuffer[0];
+          swappedBuffer[0] = swappedBuffer[1];
+          swappedBuffer[1] = temp;
+
+          const temp2 = swappedBuffer[2];
+          swappedBuffer[2] = swappedBuffer[3];
+          swappedBuffer[3] = temp2;
+
+          const value = swappedBuffer.readUInt32LE();
 
           // Update the value in the database
           updateValueInDatabase(pool, value, "gas_consumption");
@@ -139,7 +159,13 @@ client.connectTCP(HOST, { port: PORT }).then(() => {
         } else {
           // Combine the two registers into a single 32-bit value
           const buffer = Buffer.from(data.buffer);
-          const gas_used = buffer.readFloatBE();
+
+          const swappedBuffer = Buffer.alloc(4);
+
+          buffer.copy(swappedBuffer, 0, 0, 4);
+          swappedBuffer.swap16();
+
+          const gas_used = swappedBuffer.readFloatLE();
 
           client.readHoldingRegisters(ADDRESS_2, 2, function (err, data) {
             if (err) {
@@ -147,13 +173,25 @@ client.connectTCP(HOST, { port: PORT }).then(() => {
             } else {
               // Combine the two registers into a single 32-bit value
               const buffer = Buffer.from(data.buffer);
-              const gas_consumption = buffer.readUInt32BE();
+              const swappedBuffer = Buffer.alloc(4);
+
+              buffer.copy(swappedBuffer, 0, 0, 4);
+
+              const temp = swappedBuffer[0];
+              swappedBuffer[0] = swappedBuffer[1];
+              swappedBuffer[1] = temp;
+
+              const temp2 = swappedBuffer[2];
+              swappedBuffer[2] = swappedBuffer[3];
+              swappedBuffer[3] = temp2;
+
+              const gas_consumption = swappedBuffer.readUInt32LE();
 
               // Insert the values into the database if gas_consumption is greater than 0
               if (gas_consumption > 0) {
                 insertValueIntoDatabase(
                   pool,
-                  "striko1",
+                  "swiftasia",
                   gas_used,
                   gas_consumption
                 );
@@ -180,14 +218,31 @@ client
             console.error(`Error reading data: ${err}`);
           } else {
             const buffer = Buffer.from(data.buffer);
-            const gas_used = buffer.readFloatBE();
+            const swappedBuffer = Buffer.alloc(4);
+
+            buffer.copy(swappedBuffer, 0, 0, 4);
+            swappedBuffer.swap16();
+
+            const gas_used = swappedBuffer.readFloatLE();
 
             client.readHoldingRegisters(ADDRESS_2, 2, function (err, data) {
               if (err) {
                 console.error(`Error reading data: ${err}`);
               } else {
                 const buffer = Buffer.from(data.buffer);
-                const gas_consumption = buffer.readUInt32BE();
+                const swappedBuffer = Buffer.alloc(4);
+
+                buffer.copy(swappedBuffer, 0, 0, 4);
+
+                const temp = swappedBuffer[0];
+                swappedBuffer[0] = swappedBuffer[1];
+                swappedBuffer[1] = temp;
+
+                const temp2 = swappedBuffer[2];
+                swappedBuffer[2] = swappedBuffer[3];
+                swappedBuffer[3] = temp2;
+
+                const gas_consumption = swappedBuffer.readUInt32LE();
 
                 // Insert the values into the database
                 const now = new Date();
@@ -198,18 +253,18 @@ client
                 let valueInserted = false;
 
                 if (
-                  hour === 08 &&
-                  minute === 27 &&
+                  hour === 8 &&
+                  minute === 38 &&
                   second === 0 &&
                   !valueInserted
                 ) {
                   insertValueIntoDatabaseAkhir(
                     pool,
-                    "Striko 1",
+                    "Swiftasia",
                     gas_used,
                     gas_consumption
                   );
-                } else if (hour !== 08 || minute !== 27 || second !== 59) {
+                } else if (hour !== 8 || minute !== 38 || second !== 59) {
                   valueInserted = false;
                 }
               }
