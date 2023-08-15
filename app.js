@@ -16,8 +16,8 @@ const DB_USER = "root";
 const DB_PASSWORD = "";
 const DB_DATABASE = "monitoring-gas";
 const DB_TABLE = "db_realtime_monitoring_gas";
-const DB_TABLE2 = "db_permenit_swiftasia";
-const DB_TABLE3 = "db_akhir_hari_swiftasia";
+const DB_TABLE2 = "db_permenit";
+const DB_TABLE3 = "db_akhir_hari";
 const DB_UPDATE_ID = 4;
 
 async function connectToDatabase() {
@@ -53,7 +53,9 @@ async function insertValueIntoDatabaseAkhir(
       `INSERT INTO ${DB_TABLE3} (nama_mesin, gas_used, gas_consumption) VALUES (?, ?, ?)`,
       [nama_mesin, rounded_gas_used, gas_consumption]
     );
-    console.log(`Inserted values into database akhir hari successfully`);
+    console.log(
+      `Inserted values swift asia into database akhir hari successfully`
+    );
   } catch (error) {
     console.error(`Error inserting values into database akhir hari: ${error}`);
   }
@@ -73,9 +75,9 @@ async function insertValueIntoDatabase(
       [nama_mesin, rounded_gas_used, gas_consumption]
     );
 
-    // console.log(`Inserted values swift asia into database successfully`);
+    // console.log(`Inserted values into database successfully`);
   } catch (error) {
-    console.error(`Error inserting swift asia into database: ${error}`);
+    console.error(`Error inserting values into database: ${error}`);
   }
 }
 //Striko1
@@ -92,7 +94,7 @@ async function updateValueInDatabase(pool, value, column) {
     //   `Updated value ${value} in database with timestamp ${timestamp}`
     // );
   } catch (error) {
-    console.error(`Error updating swift asia in database: ${error}`);
+    console.error(`Error updating value in database: ${error}`);
   }
 }
 
@@ -253,9 +255,9 @@ client
                 let valueInserted = false;
 
                 if (
-                  hour === 8 &&
-                  minute === 38 &&
-                  second === 0 &&
+                  hour === 23 &&
+                  minute === 59 &&
+                  second === 30 &&
                   !valueInserted
                 ) {
                   insertValueIntoDatabaseAkhir(
@@ -264,7 +266,7 @@ client
                     gas_used,
                     gas_consumption
                   );
-                } else if (hour !== 8 || minute !== 38 || second !== 59) {
+                } else if (hour !== 23 || minute !== 59 || second !== 59) {
                   valueInserted = false;
                 }
               }
